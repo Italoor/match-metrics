@@ -16,4 +16,5 @@ export const NUMERIC_METRICS: (keyof UIPlayerStats)[] = [
   '% Aerial Duels won',
   'Matches Played',
   'Avg Mins per Match',
+  '90s',
 ];

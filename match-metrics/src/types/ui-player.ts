@@ -63,5 +63,6 @@ export interface PlayerStats {
   "Shot creating actions p 90": number;
   "Goal creating actions p 90": number;
   "Crosses Stopped": number;
+  "90s": number;
   season: string;
 }

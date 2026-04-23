@@ -81,6 +81,7 @@ export const adaptPlayer = (p: Player): UIPlayerStats => {
     'Shot creating actions p 90': rounded(p.stats?.sca_per_90 || 0),
     'Goal creating actions p 90': rounded(p.stats?.gca_per_90 || 0),
     'Crosses Stopped': p.stats?.crosses_stopped || 0,
+    '90s': rounded((p.stats?.total_minutes || 0) / 90),
     season: p.stats?.season || '',
   };
 };
