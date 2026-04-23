@@ -18,9 +18,15 @@ export function RankingsTab({ explorerFilteredUnsorted }: RankingsTabProps) {
     >
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {[
-          { title: 'Goal Scoring Efficiency', metric: 'Goals per shot' as const },
-          { title: 'Creative Output', metric: 'Key passes' as const },
-          { title: 'Ball Progression', metric: 'Progressive Carries' as const },
+          { title: 'Goals per 90', metric: 'Goals p 90' as const },
+          { title: 'Assists per 90', metric: 'Assists p 90' as const },
+          { title: 'Successful Take-Ons %', metric: '% Successful take-ons' as const },
+          { title: 'Shot-Creating Actions', metric: 'Shot creating actions p 90' as const },
+          { title: 'Goal-Creating Actions', metric: 'Goal creating actions p 90' as const },
+          { title: 'Progressive Passes', metric: 'Progressive Passes' as const },
+          { title: 'Aerial Duel Win %', metric: '% Aerial Duels won' as const },
+          { title: 'Dribbles Tackled %', metric: '% Dribbles tackled' as const },
+          { title: 'Pass Completion %', metric: 'Pass completion %' as const },
         ].map((rank) => (
           <div key={rank.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-6 text-sm font-black uppercase tracking-widest text-slate-400">{rank.title}</h3>
