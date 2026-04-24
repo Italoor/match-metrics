@@ -67,8 +67,8 @@ export function ComparisonTab({
                 })}
               </div>
             </div>
-            <div className="flex flex-col items-center justify-center rounded-[2rem] bg-slate-50 p-8">
-              <h3 className="mb-8 text-xl font-black uppercase tracking-tighter">Role Overlap</h3>
+            <div className="flex flex-col justify-center rounded-[2rem] bg-slate-50 p-8">
+              <h3 className="mb-8 text-center text-xl font-black uppercase tracking-tighter">Role Overlap</h3>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart

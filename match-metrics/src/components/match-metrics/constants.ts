@@ -7,6 +7,7 @@ export const NUMERIC_METRICS: (keyof UIPlayerStats)[] = [
   'Key passes',
   'Pass completion %',
   'Progressive Passes',
+  'Progressive Passes p 90',
   'Progressive Carries',
   'Tackles Won',
   'Interceptions',

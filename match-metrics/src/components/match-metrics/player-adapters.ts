@@ -36,6 +36,9 @@ export const adaptPlayer = (p: Player): UIPlayerStats => {
     'Exp NPG': rounded(p.stats?.exp_npg || 0),
     'Progressive Carries': p.stats?.progressive_carries || 0,
     'Progressive Passes': p.stats?.progressive_passes || 0,
+    'Progressive Passes p 90': p.stats?.progressive_passes && p.stats?.total_minutes
+      ? rounded((p.stats.progressive_passes / p.stats.total_minutes) * 90)
+      : 0,
     'Goals p 90': rounded(p.stats?.goals_per_90 || 0),
     'Assists p 90': rounded(p.stats?.assists_per_90 || 0),
     'Tackles attempted': p.stats?.tackles_attempted || 0,
@@ -82,6 +85,7 @@ export const adaptPlayer = (p: Player): UIPlayerStats => {
     'Goal creating actions p 90': rounded(p.stats?.gca_per_90 || 0),
     'Crosses Stopped': p.stats?.crosses_stopped || 0,
     '90s': rounded((p.stats?.total_minutes || 0) / 90),
+    'Minutes': p.stats?.total_minutes || 0,
     season: p.stats?.season || '',
   };
 };
@@ -95,6 +99,7 @@ export const aggregateUIStats = (seasons: UIPlayerStats[]): UIPlayerStats => {
     'Pass completion %',
     'Goals p 90',
     'Assists p 90',
+    'Progressive Passes p 90',
     '% Dribbles tackled',
     'Saves %',
     '% Clean sheets',

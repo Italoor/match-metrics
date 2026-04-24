@@ -41,7 +41,7 @@ export function MatchMetricsDashboard() {
   useEffect(() => {
     async function loadData() {
       const [backendPlayers, comps, seasonsList] = await Promise.all([
-        getPlayers({ season: seasonFilter, comp: compFilter, pos: posFilter }),
+        getPlayers({ season: seasonFilter }),
         getLeagues(),
         getSeasons(),
       ]);
@@ -55,7 +55,7 @@ export function MatchMetricsDashboard() {
       setAvailableSeasons(seasonsList);
     }
     loadData();
-  }, [seasonFilter, compFilter, posFilter]);
+  }, [seasonFilter]);
 
   const explorerFilteredUnsorted = useMemo(() => {
     const filtered = playersData.filter((p) => {
@@ -246,7 +246,9 @@ export function MatchMetricsDashboard() {
             />
           )}
 
-          {activeTab === 'rankings' && <RankingsTab explorerFilteredUnsorted={explorerFilteredUnsorted} />}
+          {activeTab === 'rankings' && (
+            <RankingsTab availableSeasons={availableSeasons} availableComps={availableComps} />
+          )}
         </AnimatePresence>
       </main>
 

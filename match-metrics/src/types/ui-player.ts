@@ -18,6 +18,7 @@ export interface PlayerStats {
   "Exp NPG": number;
   "Progressive Carries": number;
   "Progressive Passes": number;
+  "Progressive Passes p 90": number;
   "Goals p 90": number;
   "Assists p 90": number;
   "Tackles attempted": number;
@@ -64,5 +65,6 @@ export interface PlayerStats {
   "Goal creating actions p 90": number;
   "Crosses Stopped": number;
   "90s": number;
+  "Minutes": number;
   season: string;
 }
