@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { abbrevPosition, adaptPlayer, aggregateUIStats } from '../components/match-metrics/player-adapters';
 import type { Player } from '../types/football';
-import type { PlayerStats as UIPlayerStats } from '../types/ui-player';
+import type { UIPlayerStats } from '../types/ui-player';
 
 const minimalPlayer = (overrides: Partial<Player> = {}): Player => ({
   id: '1',

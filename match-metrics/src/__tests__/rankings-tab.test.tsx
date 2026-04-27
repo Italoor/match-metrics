@@ -2,10 +2,23 @@
  * Integration tests for RankingsTab: top five ordering by metric.
  */
 import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import { RankingsTab } from '@/components/match-metrics/rankings-tab';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
+
+const dataServiceMocks = vi.hoisted(() => ({
+  getPlayers: vi.fn(),
+}));
+
+vi.mock('@/lib/data-service', () => ({
+  getPlayers: dataServiceMocks.getPlayers,
+}));
+
+vi.mock('@/components/match-metrics/player-adapters', () => ({
+  adaptPlayer: (p: any) => p,
+  aggregateUIStats: (seasons: any[]) => seasons[0],
+}));
 
 vi.mock('motion/react', () => ({
   motion: {
@@ -15,17 +28,21 @@ vi.mock('motion/react', () => ({
   },
 }));
 
-const row = (player: string, goalsPerShot: number, squad = 'S'): UIPlayerStats =>
+const row = (player: string, goalsPer90: number, squad = 'S'): UIPlayerStats =>
   ({
     player,
     nation: 'N',
     pos: 'FW',
+    position: 'FW',
     squad,
     comp: 'C',
     age: 20,
     born: 2004,
+    minutes: 1500,
+    minutes_90s: 1500 / 90,
     'Matches Played': 10,
     'Avg Mins per Match': 80,
+    Minutes: 1500, // needs > 1040 mins to pass the threshold
     Goals: 5,
     Assists: 0,
     'Goals & Assists': 5,
@@ -35,8 +52,10 @@ const row = (player: string, goalsPerShot: number, squad = 'S'): UIPlayerStats =
     'Exp NPG': 2,
     'Progressive Carries': 10,
     'Progressive Passes': 5,
-    'Goals p 90': 0.5,
+    'Progressive Passes p 90': 0,
+    'Goals p 90': goalsPer90,
     'Assists p 90': 0,
+    '90s': 1500 / 90,
     'Tackles attempted': 0,
     'Tackles Won': 0,
     '% Dribbles tackled': 0,
@@ -74,7 +93,7 @@ const row = (player: string, goalsPerShot: number, squad = 'S'): UIPlayerStats =
     'Total Shots': 10,
     '% Shots on target': 0,
     'Shots p 90': 0,
-    'Goals per shot': goalsPerShot,
+    'Goals per shot': 0,
     'Goals per shot on target': 0,
     '% Aerial Duels won': 0,
     'Shot creating actions p 90': 0,
@@ -84,7 +103,11 @@ const row = (player: string, goalsPerShot: number, squad = 'S'): UIPlayerStats =
   }) as UIPlayerStats;
 
 describe('RankingsTab', () => {
-  it('shows top five players by Goals per shot in the efficiency column', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('shows top five players by Goals per 90 in the rankings column', async () => {
     const players = [
       row('Low', 0.05),
       row('Mid', 0.15),
@@ -93,8 +116,20 @@ describe('RankingsTab', () => {
       row('Second', 0.35),
       row('Third', 0.25),
     ];
-    render(<RankingsTab explorerFilteredUnsorted={players} />);
-    const efficiencyCard = screen.getByText(/Goal Scoring Efficiency/i).closest('.rounded-3xl');
+    dataServiceMocks.getPlayers.mockResolvedValue(players);
+    render(
+      <RankingsTab
+        availableSeasons={['2023-2024']}
+        availableComps={['C']}
+        fetchPlayersCached={dataServiceMocks.getPlayers}
+      />,
+    );
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Goals per 90/i)).toBeInTheDocument();
+    });
+
+    const efficiencyCard = screen.getByText(/Goals per 90/i).closest('.rounded-3xl');
     expect(efficiencyCard).toBeTruthy();
     const names = within(efficiencyCard as HTMLElement)
       .getAllByText(/^Top$|^High$|^Second$|^Third$|^Mid$|^Low$/)
@@ -102,10 +137,22 @@ describe('RankingsTab', () => {
     expect(names).toEqual(['Top', 'High', 'Second', 'Third', 'Mid']);
   });
 
-  it('displays rank indices 1 through 5 for the goal scoring efficiency card', () => {
+  it('displays rank indices 1 through 5 for the goals per 90 card', async () => {
     const players = Array.from({ length: 6 }, (_, i) => row(`P${i}`, 0.1 + i * 0.01));
-    render(<RankingsTab explorerFilteredUnsorted={players} />);
-    const efficiencyCard = screen.getByText(/Goal Scoring Efficiency/i).closest('.rounded-3xl');
+    dataServiceMocks.getPlayers.mockResolvedValue(players);
+    render(
+      <RankingsTab
+        availableSeasons={['2023-2024']}
+        availableComps={['C']}
+        fetchPlayersCached={dataServiceMocks.getPlayers}
+      />,
+    );
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Goals per 90/i)).toBeInTheDocument();
+    });
+
+    const efficiencyCard = screen.getByText(/Goals per 90/i).closest('.rounded-3xl');
     expect(efficiencyCard).toBeTruthy();
     const ranks = within(efficiencyCard as HTMLElement).getAllByText(/^[1-5]$/);
     expect(ranks.map((e) => e.textContent)).toEqual(['1', '2', '3', '4', '5']);

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 import { cn } from '@/lib/utils';
 import { searchAllSeasonsByQuery } from '@/lib/data-service';
 import { adaptPlayer, aggregateUIStats } from './player-adapters';

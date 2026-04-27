@@ -5,11 +5,7 @@ import { Player, PlayerStats } from '@/types/football';
 /** Internal type to represent raw Supabase player row with relation */
 type PlayerRow = Omit<Player, 'stats'> & { stats: PlayerStats | PlayerStats[] };
 
-/** Row shape returned by player search select (partial columns, no `created_at`) */
-type PlayerSearchRow = {
-  name: string;
-  stats: Pick<PlayerStats, 'season'> | Pick<PlayerStats, 'season'>[];
-};
+
 
 type PlayerQueryFilters = {
   comp?: string;
@@ -23,14 +19,7 @@ type PlayerQueryFilters = {
   maxAge?: number;
 };
 
-function seasonFromJoinedStats(row: {
-  stats?: Pick<PlayerStats, 'season'> | Pick<PlayerStats, 'season'>[] | PlayerStats | PlayerStats[];
-}): string | undefined {
-  const { stats } = row;
-  if (!stats) return undefined;
-  if (Array.isArray(stats)) return stats[0]?.season;
-  return stats.season;
-}
+
 
 /**
  * Helper to build an accent-insensitive regex for Supabase imatch
@@ -68,167 +57,11 @@ function mockPlayersMatchingSearch(query: string): Player[] {
   );
 }
 
-/**
- * Search unique players by name (deduplicated, returns latest season entry).
- * Returns up to 20 unique matches.
- */
-export const searchUniquePlayers = async (query: string): Promise<Player[]> => {
-  if (!query || query.length < 2 || query.length > 50) return [];
 
-  if (!isSupabaseConfigured()) {
-    return mockPlayersMatchingSearch(query);
-  }
 
-  try {
-    // Fetch all matches, then deduplicate client-side (picking the latest season)
-    const { data, error } = await supabase
-      .from('players')
-      .select('id, name, team, position, nationality, comp, age, born, image_url, stats:player_stats!inner(season)')
-      .filter('name', 'imatch', buildSearchRegex(query))
-      .limit(100);
 
-    if (error || !data) return [];
 
-    const rows = data as PlayerSearchRow[];
 
-    // Sort by season descending so the latest club appears first
-    rows.sort((a, b) => {
-      const sA = seasonFromJoinedStats(a);
-      const sB = seasonFromJoinedStats(b);
-      return (sB || '').localeCompare(sA || '');
-    });
-
-    // Deduplicate by player name — keep the first occurrence for display
-    const seen = new Map<string, PlayerSearchRow>();
-    for (const p of rows) {
-      const key = p.name.toLowerCase();
-      if (!seen.has(key)) {
-        seen.set(key, p);
-      }
-    }
-
-    const uniquePlayers = Array.from(seen.values()).slice(0, 20);
-
-    return uniquePlayers.map(p => ({
-      ...p,
-      stats: {} as PlayerStats,
-    })) as Player[];
-  } catch (e) {
-    console.error('Error in searchUniquePlayers:', e);
-    return [];
-  }
-};
-
-/**
- * Fetch all season entries for a given player name.
- * Returns an array of Player objects, one per season, sorted newest first.
- */
-export const getPlayerSeasons = async (playerName: string): Promise<Player[]> => {
-  if (!isSupabaseConfigured()) {
-    return MOCK_PLAYERS.filter(p =>
-      p.name.toLowerCase() === playerName.toLowerCase()
-    );
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('players')
-      .select(`
-        *,
-        stats:player_stats!inner(*)
-      `)
-      .eq('name', playerName);
-
-    if (error || !data || data.length === 0) return [];
-
-    // Sort by season descending
-    data.sort((a: PlayerRow, b: PlayerRow) => {
-      const sA = seasonFromJoinedStats(a);
-      const sB = seasonFromJoinedStats(b);
-      return (sB || '').localeCompare(sA || '');
-    });
-
-    return data.map((p: PlayerRow) => ({
-      ...p,
-      stats: Array.isArray(p.stats) ? (p.stats[0] || {}) : (p.stats || {}),
-    })) as Player[];
-  } catch (e) {
-    console.error('Error in getPlayerSeasons:', e);
-    return [];
-  }
-};
-
-/**
- * Compute career (aggregate) stats from multiple season entries.
- * Sums counting stats, averages rate stats.
- */
-export const computeCareerStats = (seasons: Player[]): PlayerStats => {
-  if (!seasons.length) return {} as PlayerStats;
-  if (seasons.length === 1) return seasons[0].stats;
-
-  const validSeasons = seasons.filter(s => s.stats && Object.keys(s.stats).length > 0);
-  if (!validSeasons.length) return {} as PlayerStats;
-
-  const n = validSeasons.length;
-
-  // Counting stats: sum (const tuple so indexed writes type-check)
-  const sumKeys = [
-    'matches_played', 'goals', 'assists', 'goals_assists', 'xg', 'exp_npg',
-    'non_penalty_goals', 'penalty_kicks_made', 'progressive_carries',
-    'progressive_passes', 'tackles_attempted', 'tackles_won',
-    'shots_blocked', 'passes_blocked', 'interceptions', 'clearances',
-    'errors_made', 'goals_against', 'saves', 'clean_sheets',
-    'passes_completed', 'passes_attempted', 'key_passes',
-    'passes_final_third', 'passes_penalty_area', 'touches_def_pen',
-    'take_ons_attempted', 'take_ons_tackled', 'carries_prgc',
-    'carries_final_third', 'carries_penalty_area', 'possessions_lost',
-    'goals_scored', 'total_shots', 'crosses_stopped', 'total_minutes',
-  ] as const satisfies readonly (keyof PlayerStats)[];
-
-  // Rate stats: average
-  const avgKeys = [
-    'goals_per_90', 'assists_per_90',
-    'dribbles_tackled_pct', 'goals_against_per_90', 'saves_pct',
-    'clean_sheets_pct', 'penalty_saves_pct', 'pass_completion_pct',
-    'prog_passes_dist', 'short_pass_pct', 'medium_pass_pct', 'long_pass_pct',
-    'take_ons_success_pct', 'shots_on_target_pct', 'shots_per_90',
-    'goals_per_shot', 'goals_per_shot_on_target', 'aerial_duels_won_pct',
-    'sca_per_90', 'gca_per_90',
-  ] as const satisfies readonly (keyof PlayerStats)[];
-
-  const result: Partial<PlayerStats> = {
-    player_id: validSeasons[0].stats.player_id,
-    season: `Career (${n} seasons)`,
-  };
-
-  // 1. Counting stats: absolute sum
-  for (const key of sumKeys) {
-    result[key] = validSeasons.reduce(
-      (sum, s) => sum + (Number(s.stats[key]) || 0),
-      0
-    );
-  }
-
-  // 2. Rate stats: weighted average based on matches_played
-  const totalMatches = validSeasons.reduce((sum, s) => sum + (Number(s.stats.matches_played) || 0), 0);
-
-  for (const key of avgKeys) {
-    if (totalMatches > 0) {
-      const weightedSum = validSeasons.reduce((sum, s) => {
-        const value = Number(s.stats[key]) || 0;
-        const weight = Number(s.stats.matches_played) || 0;
-        return sum + (value * weight);
-      }, 0);
-      result[key] = weightedSum / totalMatches;
-    } else {
-      // Fallback to simple average if no matches played
-      const total = validSeasons.reduce((sum, s) => sum + (Number(s.stats[key]) || 0), 0);
-      result[key] = total / n;
-    }
-  }
-
-  return result as PlayerStats;
-};
 
 // ---- Legacy exports for backward compatibility ----
 
@@ -278,9 +111,11 @@ export const getPlayers = async (
 
       const { data, error } = await query;
         
-      if (error || !data) {
-        break;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(error.message);
       }
+      if (!data) break;
       
       allData = allData.concat(data);
       if (data.length < step) {
@@ -293,14 +128,15 @@ export const getPlayers = async (
       }
     }
 
-    if (allData.length === 0) return MOCK_PLAYERS;
+    if (allData.length === 0) return [];
 
     return allData.map((p: PlayerRow) => ({
       ...p,
       stats: Array.isArray(p.stats) ? (p.stats[0] || {}) : (p.stats || {}),
     })) as Player[];
-  } catch {
-    return MOCK_PLAYERS;
+  } catch (err) {
+    console.error('Data service error:', err);
+    throw err;
   }
 };
 
@@ -360,4 +196,4 @@ export const getSeasons = async (): Promise<string[]> => {
   }
 };
 
-export const searchPlayers = searchUniquePlayers;
+

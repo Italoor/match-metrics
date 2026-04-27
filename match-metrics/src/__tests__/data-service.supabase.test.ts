@@ -74,67 +74,7 @@ describe('data-service with Supabase configured', () => {
     vi.resetModules();
   });
 
-  describe('searchUniquePlayers', () => {
-    it('returns empty array when Supabase returns an error', async () => {
-      ctx.enqueuePlayers({ data: null, error: { message: 'fail' } });
-      const { searchUniquePlayers } = await import('../lib/data-service');
-      expect(await searchUniquePlayers('ab')).toEqual([]);
-    });
 
-    it('returns empty array when Supabase returns null data', async () => {
-      ctx.enqueuePlayers({ data: null, error: null });
-      const { searchUniquePlayers } = await import('../lib/data-service');
-      expect(await searchUniquePlayers('ab')).toEqual([]);
-    });
-
-    it('deduplicates by player name and caps at 20 unique players', async () => {
-      const rows = Array.from({ length: 25 }, (_, i) => ({
-        id: String(i),
-        name: `Player ${i}`,
-        team: 'T',
-        position: 'Forward',
-        nationality: 'X',
-        comp: 'C',
-        age: 20,
-        born: 2000,
-        image_url: '',
-        stats: { season: '2023/24' },
-      }));
-      ctx.enqueuePlayers({ data: rows, error: null });
-      const { searchUniquePlayers } = await import('../lib/data-service');
-      const result = await searchUniquePlayers('Player');
-      expect(result).toHaveLength(20);
-      expect(result[0].stats).toEqual({});
-    });
-
-    it('sorts rows by joined season descending before deduplicating same name', async () => {
-      const rows = [
-        {
-          id: '1',
-          name: 'Same Name',
-          team: 'Old',
-          position: 'Forward',
-          nationality: 'X',
-          image_url: '',
-          stats: { season: '2020/21' },
-        },
-        {
-          id: '2',
-          name: 'Same Name',
-          team: 'New',
-          position: 'Forward',
-          nationality: 'X',
-          image_url: '',
-          stats: { season: '2023/24' },
-        },
-      ];
-      ctx.enqueuePlayers({ data: rows, error: null });
-      const { searchUniquePlayers } = await import('../lib/data-service');
-      const result = await searchUniquePlayers('Same');
-      expect(result).toHaveLength(1);
-      expect(result[0].team).toBe('New');
-    });
-  });
 
   describe('searchAllSeasonsByQuery', () => {
     it('returns empty array when Supabase returns an error', async () => {
@@ -165,45 +105,7 @@ describe('data-service with Supabase configured', () => {
     });
   });
 
-  describe('getPlayerSeasons', () => {
-    it('returns one row per DB row sorted by season descending and collapses stats arrays', async () => {
-      const rows = [
-        {
-          id: '1',
-          name: 'Pro',
-          team: 'A',
-          position: 'Forward',
-          nationality: 'N',
-          image_url: '',
-          created_at: 't',
-          stats: [{ season: '2021/22', goals: 1, player_id: '1' }],
-        },
-        {
-          id: '1',
-          name: 'Pro',
-          team: 'A',
-          position: 'Forward',
-          nationality: 'N',
-          image_url: '',
-          created_at: 't',
-          stats: [{ season: '2023/24', goals: 5, player_id: '1' }],
-        },
-      ];
-      ctx.enqueuePlayers({ data: rows, error: null });
-      const { getPlayerSeasons } = await import('../lib/data-service');
-      const result = await getPlayerSeasons('Pro');
-      expect(result).toHaveLength(2);
-      expect(result[0].stats.season).toBe('2023/24');
-      expect(result[0].stats.goals).toBe(5);
-      expect(result[1].stats.season).toBe('2021/22');
-    });
 
-    it('returns empty array when no rows match', async () => {
-      ctx.enqueuePlayers({ data: [], error: null });
-      const { getPlayerSeasons } = await import('../lib/data-service');
-      expect(await getPlayerSeasons('Nobody')).toEqual([]);
-    });
-  });
 
   describe('getPlayers', () => {
     it('returns mapped players when a single page is shorter than the step size', async () => {

@@ -1,4 +1,4 @@
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 
 export const NUMERIC_METRICS: (keyof UIPlayerStats)[] = [
   'Goals',

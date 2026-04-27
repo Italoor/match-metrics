@@ -1,8 +1,8 @@
 'use client';
 
-import { ChevronDown, Download } from 'lucide-react';
+import { ChevronDown, Download, Search } from 'lucide-react';
 import { motion } from 'motion/react';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 
 type ExplorerTabProps = {
   seasonFilter: string;
@@ -20,6 +20,8 @@ type ExplorerTabProps = {
   sortDirection: 'asc' | 'desc';
   handleSort: (column: keyof UIPlayerStats) => void;
   exportExplorerCsv: () => void;
+  searchTerm: string;
+  setSearchTerm: (v: string) => void;
 };
 
 export function ExplorerTab({
@@ -38,6 +40,8 @@ export function ExplorerTab({
   sortDirection,
   handleSort,
   exportExplorerCsv,
+  searchTerm,
+  setSearchTerm,
 }: ExplorerTabProps) {
   return (
     <motion.div
@@ -47,12 +51,12 @@ export function ExplorerTab({
       exit={{ opacity: 0, y: -10 }}
       className="space-y-6"
     >
-      <div className="mb-2 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+      <div className="mb-2 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h2 className="text-2xl font-black tracking-tight">Data Explorer</h2>
           <p className="text-sm text-slate-500">Browse and filter detailed player statistics across the league.</p>
         </div>
-        <div className="flex w-full gap-2 overflow-x-auto pb-2 md:w-auto md:pb-0">
+        <div className="flex w-full items-end gap-2 overflow-x-auto pb-2 md:w-auto md:pb-0">
           <div className="relative">
             <select
               className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-slate-900"
@@ -110,14 +114,26 @@ export function ExplorerTab({
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
-          <button
-            type="button"
-            onClick={exportExplorerCsv}
-            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold shadow-sm transition-colors hover:bg-slate-50"
-          >
-            <Download className="h-4 w-4" />
-            Export
-          </button>
+          <div className="flex flex-col gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Quick search..."
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm font-bold shadow-sm outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 md:w-48"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={exportExplorerCsv}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold shadow-sm transition-colors hover:bg-slate-50"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </button>
+          </div>
         </div>
       </div>
 

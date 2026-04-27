@@ -42,13 +42,13 @@ describe('MatchMetricsDashboard', () => {
     render(<MatchMetricsDashboard />);
     await waitFor(() => expect(dataServiceMocks.getPlayers).toHaveBeenCalled());
     expect(dataServiceMocks.getPlayers).toHaveBeenCalledWith(
-      expect.objectContaining({ season: '2023-2024', comp: 'All', pos: 'All' }),
+      expect.objectContaining({ season: '2023-2024' }),
     );
     expect(dataServiceMocks.getLeagues).toHaveBeenCalled();
     expect(dataServiceMocks.getSeasons).toHaveBeenCalled();
   });
 
-  it('refetches players when season, competition, or position filters change', async () => {
+  it('refetches players when season filter changes', async () => {
     const user = userEvent.setup();
     render(<MatchMetricsDashboard />);
     await waitFor(() => expect(dataServiceMocks.getPlayers).toHaveBeenCalledTimes(1));
@@ -57,21 +57,7 @@ describe('MatchMetricsDashboard', () => {
     await user.selectOptions(seasonSelect, 'All');
     await waitFor(() => expect(dataServiceMocks.getPlayers).toHaveBeenCalledTimes(2));
     expect(dataServiceMocks.getPlayers).toHaveBeenLastCalledWith(
-      expect.objectContaining({ season: 'All', comp: 'All', pos: 'All' }),
-    );
-
-    const compSelect = screen.getAllByRole('combobox')[1];
-    await user.selectOptions(compSelect, 'La Liga');
-    await waitFor(() => expect(dataServiceMocks.getPlayers).toHaveBeenCalledTimes(3));
-    expect(dataServiceMocks.getPlayers).toHaveBeenLastCalledWith(
-      expect.objectContaining({ comp: 'La Liga' }),
-    );
-
-    const posSelect = screen.getAllByRole('combobox')[2];
-    await user.selectOptions(posSelect, 'FW');
-    await waitFor(() => expect(dataServiceMocks.getPlayers).toHaveBeenCalledTimes(4));
-    expect(dataServiceMocks.getPlayers).toHaveBeenLastCalledWith(
-      expect.objectContaining({ pos: 'FW' }),
+      expect.objectContaining({ season: 'All' }),
     );
   });
 
@@ -87,7 +73,7 @@ describe('MatchMetricsDashboard', () => {
     expect(screen.getByText(/Primary Player/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Rankings/i }));
-    expect(screen.getByText(/Goal Scoring Efficiency/i)).toBeInTheDocument();
+    expect(screen.getByText(/Goals per 90/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Data Explorer/i }));
     expect(screen.getByRole('heading', { name: /Data Explorer/i })).toBeInTheDocument();

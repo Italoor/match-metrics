@@ -1,4 +1,4 @@
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 import type { Player } from '@/types/football';
 
 const POSITION_ABBREV: Record<string, string> = {

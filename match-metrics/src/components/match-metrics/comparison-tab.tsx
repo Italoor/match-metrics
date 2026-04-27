@@ -2,7 +2,7 @@
 
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, Legend } from 'recharts';
 import { motion } from 'motion/react';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 import { PlayerSearch } from './player-search';
 
 type ComparisonTabProps = {

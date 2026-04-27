@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ExplorerTab } from '@/components/match-metrics/explorer-tab';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 
 vi.mock('motion/react', () => ({
   motion: {
@@ -106,6 +106,8 @@ describe('ExplorerTab', () => {
         sortDirection="desc"
         handleSort={vi.fn()}
         exportExplorerCsv={vi.fn()}
+        searchTerm=""
+        setSearchTerm={vi.fn()}
       />,
     );
     const seasonSelect = screen.getAllByRole('combobox')[0];
@@ -133,6 +135,8 @@ describe('ExplorerTab', () => {
         sortDirection="desc"
         handleSort={handleSort}
         exportExplorerCsv={vi.fn()}
+        searchTerm=""
+        setSearchTerm={vi.fn()}
       />,
     );
     await user.click(screen.getByRole('columnheader', { name: /Player/i }));
@@ -159,6 +163,8 @@ describe('ExplorerTab', () => {
         sortDirection="desc"
         handleSort={vi.fn()}
         exportExplorerCsv={exportExplorerCsv}
+        searchTerm=""
+        setSearchTerm={vi.fn()}
       />,
     );
     await user.click(screen.getByRole('button', { name: /Export/i }));
@@ -183,6 +189,8 @@ describe('ExplorerTab', () => {
         sortDirection="desc"
         handleSort={vi.fn()}
         exportExplorerCsv={vi.fn()}
+        searchTerm=""
+        setSearchTerm={vi.fn()}
       />,
     );
     expect(screen.getByText('Gamma')).toBeInTheDocument();

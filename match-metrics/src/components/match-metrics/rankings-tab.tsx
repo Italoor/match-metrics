@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useTransition } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import type { UIPlayerStats } from '@/types/ui-player';
 import { getPlayers } from '@/lib/data-service';
 import { adaptPlayer, aggregateUIStats } from './player-adapters';
 
@@ -25,32 +25,45 @@ const MIN_MINUTES = 1040;
 type RankingsTabProps = {
   availableSeasons: string[];
   availableComps: string[];
+  fetchPlayersCached: (filters: Parameters<typeof getPlayers>[0]) => ReturnType<typeof getPlayers>;
 };
 
-export function RankingsTab({ availableSeasons, availableComps }: RankingsTabProps) {
-  const [seasonFilter, setSeasonFilter] = useState<string>('2023-2024');
+export function RankingsTab({ availableSeasons, availableComps, fetchPlayersCached }: RankingsTabProps) {
+  const [seasonFilter, setSeasonFilter] = useState<string>('All');
   const [compFilter, setCompFilter] = useState<string>('All');
   const [posFilter, setPosFilter] = useState<string>('All');
   const [rawPlayers, setRawPlayers] = useState<UIPlayerStats[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     let cancelled = false;
     async function loadData() {
-      setIsLoading(true);
-      const backendPlayers = await getPlayers({
-        season: seasonFilter,
-        minMinutes: MIN_MINUTES,
-      });
-      if (!cancelled) {
-        setRawPlayers(backendPlayers.map(adaptPlayer));
-        setIsLoading(false);
+      try {
+        setIsLoading(true);
+        setError(null);
+        const backendPlayers = await fetchPlayersCached({
+          season: seasonFilter,
+          minMinutes: MIN_MINUTES,
+        });
+        if (!cancelled) {
+          setRawPlayers(backendPlayers.map(adaptPlayer));
+        }
+      } catch (err) {
+        console.error('Failed to load rankings:', err);
+        if (!cancelled) {
+          setError('Failed to load rankings data.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     }
     loadData();
     return () => { cancelled = true; };
-  }, [seasonFilter]);
+  }, [seasonFilter, fetchPlayersCached]);
 
   // Filter once — shared across all ranking cards
   const eligiblePlayers = useMemo(() => {
@@ -169,7 +182,20 @@ export function RankingsTab({ availableSeasons, availableComps }: RankingsTabPro
         </div>
       </div>
 
-      {isLoading ? (
+      {error ? (
+        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-red-100 bg-red-50/50 p-12 text-center">
+          <AlertCircle className="mb-4 h-8 w-8 text-red-600" />
+          <h3 className="mb-2 text-lg font-black text-red-900">Rankings Unavailable</h3>
+          <p className="mb-4 text-sm font-medium text-red-700/80">{error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      ) : isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
         </div>

@@ -1,5 +1,5 @@
 /** Display-shaped player row used by tables and charts (distinct from API `Player` / `PlayerStats`). */
-export interface PlayerStats {
+export interface UIPlayerStats {
   player: string;
   nation: string;
   pos: string;

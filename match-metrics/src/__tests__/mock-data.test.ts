@@ -3,7 +3,7 @@
  * Validates shape correctness and lookup helper.
  */
 import { describe, it, expect } from 'vitest';
-import { MOCK_PLAYERS, getPlayerByIdMock } from '../lib/mock-data';
+import { MOCK_PLAYERS } from '../lib/mock-data';
 
 describe('MOCK_PLAYERS', () => {
   it('is a non-empty array', () => {
@@ -53,22 +53,4 @@ describe('MOCK_PLAYERS', () => {
   });
 });
 
-describe('getPlayerByIdMock', () => {
-  it('returns the correct player for a valid id', () => {
-    const first = MOCK_PLAYERS[0];
-    const result = getPlayerByIdMock(first.id);
-    expect(result).toBeDefined();
-    expect(result?.id).toBe(first.id);
-    expect(result?.name).toBe(first.name);
-  });
 
-  it('returns undefined for an unknown id', () => {
-    const result = getPlayerByIdMock('does-not-exist-9999');
-    expect(result).toBeUndefined();
-  });
-
-  it('returns undefined for an empty string id', () => {
-    const result = getPlayerByIdMock('');
-    expect(result).toBeUndefined();
-  });
-});

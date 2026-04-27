@@ -75,10 +75,4 @@ export interface Player {
   stats: PlayerStats;
 }
 
-export interface ComparisonResult {
-  statName: keyof PlayerStats;
-  playerAValue: number;
-  playerBValue: number;
-  difference: number;
-  percentageDiff: number;
-}
+

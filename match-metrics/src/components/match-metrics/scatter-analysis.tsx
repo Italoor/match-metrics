@@ -12,8 +12,8 @@ import {
   ZAxis,
   Cell,
 } from 'recharts';
-import { Target, Filter, Activity, Target as ScatterIcon } from 'lucide-react';
-import type { PlayerStats as UIPlayerStats } from '@/types/ui-player';
+import { Target, Filter, Activity, Target as ScatterIcon, AlertCircle, RefreshCcw } from 'lucide-react';
+import type { UIPlayerStats } from '@/types/ui-player';
 import { getPlayers } from '@/lib/data-service';
 import { NUMERIC_METRICS } from './constants';
 import { adaptPlayer, aggregateUIStats } from './player-adapters';
@@ -22,9 +22,10 @@ import { CustomTooltip } from './custom-tooltip';
 type ScatterAnalysisProps = {
   availableComps: string[];
   availableSeasons: string[];
+  fetchPlayersCached: (filters: Parameters<typeof getPlayers>[0]) => ReturnType<typeof getPlayers>;
 };
 
-export function ScatterAnalysis({ availableComps, availableSeasons }: ScatterAnalysisProps) {
+export function ScatterAnalysis({ availableComps, availableSeasons, fetchPlayersCached }: ScatterAnalysisProps) {
   const [xAxis, setXAxis] = useState<keyof UIPlayerStats>('Expected Goals');
   const [yAxis, setYAxis] = useState<keyof UIPlayerStats>('Goals');
 
@@ -43,30 +44,38 @@ export function ScatterAnalysis({ availableComps, availableSeasons }: ScatterAna
   const [players, setPlayers] = useState<UIPlayerStats[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchScatterData = async () => {
-    setIsLoading(true);
-    setHasApplied(true);
-    const result = await getPlayers({
-      comp: compFilter,
-      season: seasonFilter,
-      pos: posFilter,
-      team: teamFilter,
-      nation: nationFilter,
-      minMinutes,
-      minMatches,
-      minAge,
-      maxAge,
-    });
-    const adapted = result.map(adaptPlayer);
-    const teamsFromResult = new Set<string>();
-    adapted.forEach((p) => {
-      if (p.squad) p.squad.split(', ').forEach((t) => teamsFromResult.add(t));
-    });
-    const teamList = Array.from(teamsFromResult).sort();
-    setTeamFilter((prev) => (prev !== 'All' && !teamList.includes(prev) ? 'All' : prev));
-    setPlayers(adapted);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setError(null);
+      setHasApplied(true);
+      const result = await fetchPlayersCached({
+        comp: compFilter,
+        season: seasonFilter,
+        pos: posFilter,
+        team: teamFilter,
+        nation: nationFilter,
+        minMinutes,
+        minMatches,
+        minAge,
+        maxAge,
+      });
+      const adapted = result.map(adaptPlayer);
+      const teamsFromResult = new Set<string>();
+      adapted.forEach((p) => {
+        if (p.squad) p.squad.split(', ').forEach((t) => teamsFromResult.add(t));
+      });
+      const teamList = Array.from(teamsFromResult).sort();
+      setTeamFilter((prev) => (prev !== 'All' && !teamList.includes(prev) ? 'All' : prev));
+      setPlayers(adapted);
+    } catch (err) {
+      console.error('Failed to fetch scatter data:', err);
+      setError('Failed to fetch data for the selected filters.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const { availableTeams, availableNations } = useMemo(() => {
@@ -318,7 +327,24 @@ export function ScatterAnalysis({ availableComps, availableSeasons }: ScatterAna
             <span className="text-sm font-bold text-slate-500">{filteredData.length} Players Found</span>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center p-12 text-center">
-            {isLoading ? (
+            {error ? (
+              <div className="max-w-md space-y-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50">
+                  <AlertCircle className="h-8 w-8 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-red-900">Fetch Failed</h3>
+                  <p className="text-sm font-medium text-red-600/80">{error}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchScatterData}
+                  className="mx-auto flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-slate-800"
+                >
+                  <RefreshCcw className="h-3 w-3" /> Retry
+                </button>
+              </div>
+            ) : isLoading ? (
               <div className="space-y-4">
                 <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-900 border-t-transparent" />
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Fetching Dataset...</p>

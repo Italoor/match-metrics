@@ -152,6 +152,4 @@ export const MOCK_PLAYERS: Player[] = [
   },
 ];
 
-export const getPlayerByIdMock = (id: string): Player | undefined => {
-  return MOCK_PLAYERS.find((player) => player.id === id);
-};
+
