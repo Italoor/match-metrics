@@ -7,7 +7,7 @@ A football statistics dashboard for analysing player performance across the top 
 - **Player Search** — filter players by name, team, position, and season
 - **Performance Overview** — goals, assists, xG, progressive carries/passes, and more
 - **Player Comparison** — side-by-side radar charts and stat breakdowns
-- **Match Analysis** — per-match and per-90-minute metrics
+- **Stats Leaderboards** — top 5 players per key-stats
 - **Season Filtering** — slice data across seven seasons (2017/18–2023/24) and all five major European leagues
 
 ## Tech Stack
